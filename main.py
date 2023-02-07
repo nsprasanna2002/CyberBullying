@@ -6,12 +6,15 @@ import joblib
 import pickle
 import streamlit as st
 import hashlib
+from stop_words import get_stop_words
 import datetime
 
 import sqlite3
 conn = sqlite3.connect('database.db')
 c = conn.cursor()
 
+stop_words = get_stop_words('english')
+stopwords = set(stop_words)
 
 model = joblib.load('./cb_sgd_final.sav')
 vectorizer = pickle.load(open('./cv.pkl', 'rb'))
@@ -25,6 +28,20 @@ def check_hashes(password,hashed_text):
     return False
 
 def predict(text):
+    text = text.replace("@", " ")
+    text = text.replace("#", " ")
+    text = text.replace("RT", " ")
+    text = text.replace(":", " ")
+    #text = text.replace(";", " ")
+    text = text.replace(",", " ")
+    text = text.replace(".", " ")
+    text = text.replace("!", " ")
+    text = text.replace("?", " ")
+    text = text.lower()
+    text = str(text)
+    text = text.split()
+    text = [word for word in text if word not in stopwords]
+    text = ' '.join(text)
     text = [text]
     text1 = vectorizer.transform(text)
     return model.predict(text1)
